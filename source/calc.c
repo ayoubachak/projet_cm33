@@ -21,6 +21,7 @@
 #include "funcs.h"
 #include "graphics.h"
 #include "dsp.h"
+#include "io.h"
 
 /***************************************************************************
  * dumping output to the screen or to a file 
@@ -350,6 +351,8 @@ static binfunc_t binfunc_list[] = {
 	{"log",1,mlog},
 	{"sqrt",1,msqrt},
 	{"mod",2,mmod},
+	{"mread",1,mreadmatrix},   
+    {"mwrite",3,mwritematrix},  
 	{"sign",1,msign},
 	{"floor",1,mfloor},
 	{"ceil",1,mceil},
