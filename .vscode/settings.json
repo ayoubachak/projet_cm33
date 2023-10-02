@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "fsl_i2c.h": "c"
+    },
+    "C_Cpp.default.compilerPath": "c:\\MinGW\\bin\\gcc.exe"
+}
