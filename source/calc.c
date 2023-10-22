@@ -472,6 +472,7 @@ static binfunc_t binfunc_list[] = {
 #endif
 
 	{"pqcos",1,mpqcos},
+	{"pqcos2",1,mpqcos2},
 	{"pqfft",1,mpqfft},
 	{"pqifft",1,mpqifft},
 };
@@ -565,6 +566,7 @@ static const binfunc_t binfunc_list[] = {
 	{"polytrunc",1,mpolytrunc},
 	{"polyval",2,mpolyval},
 	{"pqcos",1,mpqcos},
+	{"pqcos2",1,mpqcos2},
 	{"pqfft",1,mpqfft},
 	{"pqifft",1,mpqifft},
 	{"printf",2,mprintf},

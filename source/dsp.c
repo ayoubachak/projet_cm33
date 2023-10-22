@@ -5,6 +5,8 @@
 
 #include "dsp.h"
 #include "funcs.h"
+#include "fsl_powerquad.h"
+
 
 /****************************************************************
  *	FFT
@@ -149,7 +151,47 @@ header* maccel(Calc *cc, header *hd)
 
 
 header* mpqcos(Calc* cc, header* hd) {
-	return NULL;
+    int r, c; // rows and columns
+    real *m, *mr; // pointers to input and output matrices
+    header *result; // Output header
+    
+    // Check input type
+    if (hd->type != s_real && hd->type != s_matrix) {
+        cc_error(cc, "Invalid input type for mpqcos");
+        return NULL;
+    }
+    
+    // Get the input matrix
+    getmatrix(hd, &r, &c, &m);
+    
+    // Allocate a new output matrix (or scalar)
+    if (hd->type == s_real) {
+        result = new_real(cc, 0, "");
+        mr = realof(result);
+        PQ_CosF32(&m[0], &mr[0]); // Update to use the function correctly
+    } else {
+        result = new_matrix(cc, r, c, "");
+        mr = matrixof(result);
+        PQ_VectorCosF32(m, mr, r * c); // Using vectorized function for matrices
+    }
+
+    // Push result to stack and return
+    return pushresults(cc, result);
+}
+
+void real_cos(real *in, real *out) {
+    PQ_CosF32(in, out);
+}
+
+header* mpqcos2(Calc* cc, header* hd) {
+    if (hd->type != s_real && hd->type != s_matrix) {
+        cc_error(cc, "Invalid input type for mpqcos");
+        return NULL;
+    }
+
+    // Use the map1 function to handle real or matrix inputs.
+    // real_cos is passed as the function to be applied elementwise.
+    return map1(cc, real_cos, NULL, hd);
 }
 
 static int32_t fft_out[1024]; // 512 points

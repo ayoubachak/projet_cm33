@@ -12,6 +12,7 @@ header* maccel (Calc *cc, header *hd);
 
 /* power quad */
 header* mpqcos(Calc* cc, header* hd);
+header* mpqcos2(Calc* cc, header* hd);
 header* mpqfft(Calc* cc, header* hd);
 header* mpqifft(Calc* cc, header* hd);
 
