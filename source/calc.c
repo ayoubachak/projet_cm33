@@ -3308,48 +3308,11 @@ void cc_error(Calc *cc, char *fmt, ...)
 	longjmp(*cc->env, 1);
 }
 
-// status_t init_accelerometer(){
-// 	/* Init board hardware. */
-//     // BOARD_InitBootPins();
-//     // BOARD_InitBootClocks();
-//     // BOARD_InitBootPeripherals();
-// 	// #ifndef BOARD_INIT_DEBUG_CONSOLE_PERIPHERAL
-// 	// 	/* Init FSL debug console. */
-// 	// 	BOARD_InitDebugConsole();
-// 	// #endif
-
-// 	// *************  ACCELEROMETER AND I2C **************
-//     i2c_master_config_t fc4_config = {
-//       .enableMaster = true,
-//       .baudRate_Bps = 400000,		/* mode Fast */
-//       .enableTimeout = false,
-// 	  .timeout_Ms = 35
-//     };
-
-//     // RESET_PeripheralReset(kFC4_RST_SHIFT_RSTn);
-//     I2C_MasterInit(I2C4, &fc4_config, I2C4_MASTER_CLK);
-//     // NVIC_SetPriority(FLEXCOMM4_IRQn,3);
-
-//     status_t initialized =  !mma8652_init(I2C4, MMA8652_RATE_6_25|MMA8652_SCALE_2G|MMA8652_RES_12|MMA8652_INT);
-
-//     /* Initialize PINT */
-//     PINT_Init(PINT);
-
-//     /* Setup Pin Interrupt 0 for falling edge and enable callback */
-//     PINT_PinInterruptConfig(PINT, kPINT_PinInt0, kPINT_PinIntEnableFallEdge, pint_cb);
-//     PINT_EnableCallbackByIndex(PINT, kPINT_PinInt0);
-//     NVIC_SetPriority(PIN_INT0_IRQn,2);
-// 	// ************* END ACCELEROMETER AND I2C *****************
-// 	return initialized;
-// }
-// status_t accel_init = 0;
 
 void main_loop (Calc *cc, int argc, char *argv[])
 {
 	
-	// if (!accel_init){
-	// 	accel_init = init_accelerometer();
-	// }
+
 
 
 	jmp_buf env;
