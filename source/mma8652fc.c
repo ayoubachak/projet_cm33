@@ -192,28 +192,50 @@ status_t mma8652_read_xyz(int32_t* data)
     /* NXP AN4083, table 15, p17 */
 
 	/* A COMPLETER */
-    // Convert the 12-bit 2's complement hex number to a signed decimal fraction in g's
-    int16_t x, y, z; // 16-bit signed integers for x, y, and z values
-    int32_t xg, yg, zg; // 32-bit signed integers for x, y, and z values in mg
-    x = (buf[0] << 8) | buf[1]; // combine the MSB and LSB of x
-    y = (buf[2] << 8) | buf[3]; // combine the MSB and LSB of y
-    z = (buf[4] << 8) | buf[5]; // combine the MSB and LSB of z
-    // Shift the values to the right by 4 bits to align the radix point
-    x >>= 4;
-    y >>= 4;
-    z >>= 4;
-    // Check the sign bit and perform 2's complement if negative
-    if (x & 0x800) x -= 0x1000;
-    if (y & 0x800) y -= 0x1000;
-    if (z & 0x800) z -= 0x1000;
-    // Multiply by 1000 and cast to int32_t to get the value in mg
-    xg = (int32_t)(x * 1000 / (1 << scale));
-    yg = (int32_t)(y * 1000 / (1 << scale));
-    zg = (int32_t)(z * 1000 / (1 << scale));
-    // Store the values in the data array
-    data[0] = xg;
-    data[1] = yg;
-    data[2] = zg; 
+    // // Convert the 12-bit 2's complement hex number to a signed decimal fraction in g's
+    // int16_t x, y, z; // 16-bit signed integers for x, y, and z values
+    // int32_t xg, yg, zg; // 32-bit signed integers for x, y, and z values in mg
+    // x = (buf[0] << 8) | buf[1]; // combine the MSB and LSB of x
+    // y = (buf[2] << 8) | buf[3]; // combine the MSB and LSB of y
+    // z = (buf[4] << 8) | buf[5]; // combine the MSB and LSB of z
+    // // Shift the values to the right by 4 bits to align the radix point
+    // x >>= 4;
+    // y >>= 4;
+    // z >>= 4;
+    // // Check the sign bit and perform 2's complement if negative
+    // if (x & 0x800) x -= 0x1000;
+    // if (y & 0x800) y -= 0x1000;
+    // if (z & 0x800) z -= 0x1000;
+    // // Multiply by 1000 and cast to int32_t to get the value in mg
+    // xg = (int32_t)(x * 1000 / (1 << scale));
+    // yg = (int32_t)(y * 1000 / (1 << scale));
+    // zg = (int32_t)(z * 1000 / (1 << scale));
+    // // Store the values in the data array
+    // data[0] = xg;
+    // data[1] = yg;
+    // data[2] = zg; 
     /* COMPLET */
+
+    /* Version 2 */
+    if (mma8652_cfg & MMA8652_RES_8) {
+        	data[0]=((buf[0]<<8))>>4;
+        	if (data[0]>=2048) data[0]-=4096;
+        	data[1]=((buf[1]<<8))>>4;
+        	if (data[1]>=2048) data[1]-=4096;
+        	data[2]=((buf[2]<<8))>>4;
+        	if (data[2]>=2048) data[2]-=4096;
+    	} else {
+    		data[0]=((buf[0]<<8) | buf[1])>>4;
+    		if (data[0]>=2048) data[0]-=4096;
+    		data[1]=((buf[2]<<8) | buf[3])>>4;
+    		if (data[1]>=2048) data[1]-=4096;
+    		data[2]=((buf[4]<<8) | buf[5])>>4;
+    		if (data[2]>=2048) data[2]-=4096;
+        }
+        data[0]=(1000*data[0]+(1<<(9-scale)))>>(10-scale);
+        data[1]=(1000*data[1]+(1<<(9-scale)))>>(10-scale);
+        data[2]=(1000*data[2]+(1<<(9-scale)))>>(10-scale);
+    /* End Version 2 */
+
     return i2c_res;
 }

@@ -1,6 +1,12 @@
 {
     "files.associations": {
-        "fsl_i2c.h": "c"
+        "fsl_i2c.h": "c",
+        "clock_config.h": "c",
+        "edit.h": "c",
+        "mma8652fc.h": "c",
+        "fsl_pint.h": "c",
+        "lpc55s69_cm33_core0.h": "c",
+        "fsl_powerquad.h": "c"
     },
     "C_Cpp.default.compilerPath": "c:\\MinGW\\bin\\gcc.exe"
 }

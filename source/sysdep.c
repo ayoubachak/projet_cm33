@@ -20,6 +20,7 @@
 #include "fsl_power.h"
 #include "fsl_usart.h"
 #include "fsl_powerquad.h"
+#include "mma8652fc.h"
 
 #include "fsl_sd.h"
 #include "ff.h"
@@ -30,6 +31,10 @@
 #include "stack.h"
 
 #include "lcd.h"
+
+#if !defined(I2C4_MASTER_CLK) 
+	#define I2C4_MASTER_CLK 12000000
+#endif
 
 
 /*******************************************************************************
@@ -1520,6 +1525,23 @@ Initialize memory and call main_loop
  	/* Allocate the stack: initialize stack limit pointers */
 	calc->ramstart=(char*)0x20018000;
 	calc->ramend=(char*)0x20030000;
+
+	// *************  ACCELEROMETER  **************
+	i2c_master_config_t fc4_config = {
+      .enableMaster = true,
+      .baudRate_Bps = 400000,		/* mode Fast */
+      .enableTimeout = false,
+	  .timeout_Ms = 35
+    };
+
+    // RESET_PeripheralReset(kFC4_RST_SHIFT_RSTn);
+    I2C_MasterInit(I2C4, &fc4_config, I2C4_MASTER_CLK);
+    // NVIC_SetPriority(FLEXCOMM4_IRQn,3);
+
+    status_t initialized =  !mma8652_init(I2C4, MMA8652_RATE_6_25|MMA8652_SCALE_2G|MMA8652_RES_12|MMA8652_INT);
+	// *************  END ACCELEROMETER  **************
+
+
 
     /* UART initialization */
     uart_init(USART0,115200U);

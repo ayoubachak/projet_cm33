@@ -120,11 +120,33 @@ header* mifft (Calc *cc, header *hd)
 	return pushresults(cc,result);
 }
 
-/* accelerometer */
-header* maccel (Calc *cc, header *hd)
-{
-	return NULL;
+
+static real random_real(real min, real max) {
+    return min + ((real)rand() / RAND_MAX) * (max - min);
 }
+
+/* accelerometer */
+header* maccel(Calc *cc, header *hd)
+{
+
+    // Define the default dimensions
+    int rows = 1;
+    int cols = 3; // We want a matrix of 1 row and 3 columns for x, y, and z
+
+    header *result = new_matrix(cc, rows, cols, "");
+
+    // Fill the matrix with random values for x, y, and z
+    real *m = matrixof(result);
+    
+	int32_t data[3];
+	mma8652_read_xyz(data);
+	m[0] = (real)data[0];
+	m[1] = (real)data[1];
+	m[2] = (real)data[2];
+
+    return pushresults(cc, result);
+}
+
 
 header* mpqcos(Calc* cc, header* hd) {
 	return NULL;

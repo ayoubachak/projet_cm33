@@ -23,6 +23,29 @@
 #include "dsp.h"
 #include "io.h"
 
+// for initializing the accelero meter
+#include "board.h"
+#include "peripherals.h"
+#include "pin_mux.h"
+#include "clock_config.h"
+#include "LPC55S69_cm33_core0.h"
+#include "fsl_debug_console.h"
+#include "fsl_pint.h"
+
+
+#define I2C4_MASTER_CLK		12000000
+
+static volatile int cmd=1;
+void pint_cb(pint_pin_int_t pintr, uint32_t pmatch_status) {
+    switch (pintr) {
+    case kPINT_PinInt0:
+    	cmd=1;
+    	break;
+     default:
+    	break;
+    }
+}
+
 /***************************************************************************
  * dumping output to the screen or to a file 
  ***************************************************************************/
@@ -84,7 +107,7 @@ int outputfhold (Calc *cc, int f, char *fmt, ...)
 	}
 	return strlen(text);
 }
-
+#define I2C4_MASTER_CLK		12000000
 #define PREFIX_START (-24)
 static const char *eng_prefix[] = {
   "y", "z", "a", "f", "p", "n", "u", "m", "",
@@ -3283,9 +3306,50 @@ void cc_error(Calc *cc, char *fmt, ...)
 	longjmp(*cc->env, 1);
 }
 
+// status_t init_accelerometer(){
+// 	/* Init board hardware. */
+//     // BOARD_InitBootPins();
+//     // BOARD_InitBootClocks();
+//     // BOARD_InitBootPeripherals();
+// 	// #ifndef BOARD_INIT_DEBUG_CONSOLE_PERIPHERAL
+// 	// 	/* Init FSL debug console. */
+// 	// 	BOARD_InitDebugConsole();
+// 	// #endif
+
+// 	// *************  ACCELEROMETER AND I2C **************
+//     i2c_master_config_t fc4_config = {
+//       .enableMaster = true,
+//       .baudRate_Bps = 400000,		/* mode Fast */
+//       .enableTimeout = false,
+// 	  .timeout_Ms = 35
+//     };
+
+//     // RESET_PeripheralReset(kFC4_RST_SHIFT_RSTn);
+//     I2C_MasterInit(I2C4, &fc4_config, I2C4_MASTER_CLK);
+//     // NVIC_SetPriority(FLEXCOMM4_IRQn,3);
+
+//     status_t initialized =  !mma8652_init(I2C4, MMA8652_RATE_6_25|MMA8652_SCALE_2G|MMA8652_RES_12|MMA8652_INT);
+
+//     /* Initialize PINT */
+//     PINT_Init(PINT);
+
+//     /* Setup Pin Interrupt 0 for falling edge and enable callback */
+//     PINT_PinInterruptConfig(PINT, kPINT_PinInt0, kPINT_PinIntEnableFallEdge, pint_cb);
+//     PINT_EnableCallbackByIndex(PINT, kPINT_PinInt0);
+//     NVIC_SetPriority(PIN_INT0_IRQn,2);
+// 	// ************* END ACCELEROMETER AND I2C *****************
+// 	return initialized;
+// }
+// status_t accel_init = 0;
 
 void main_loop (Calc *cc, int argc, char *argv[])
 {
+	
+	// if (!accel_init){
+	// 	accel_init = init_accelerometer();
+	// }
+
+
 	jmp_buf env;
 	char input[LINEMAX]="";
 	int i;
@@ -3303,7 +3367,7 @@ void main_loop (Calc *cc, int argc, char *argv[])
 	cc->line = cc->next = input;	/* setup input line */
 	cc->result = NULL;
 	/* setup formats */
-	cc->disp_mode=0;
+	cc->disp_mode=0; 
 	cc->disp_digits=6;
 	cc->disp_fieldw=14;
 	cc->disp_eng_sym=0;
