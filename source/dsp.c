@@ -155,6 +155,10 @@ header* mpqcos(Calc* cc, header* hd) {
     real *m, *mr; // pointers to input and output matrices
     header *result; // Output header
     
+	if (hd->type == s_reference) { // if the variable is a reference 
+        hd = getvalue(cc, hd);
+    }
+
     // Check input type
     if (hd->type != s_real && hd->type != s_matrix) {
         cc_error(cc, "Invalid input type for mpqcos");
@@ -184,6 +188,9 @@ void real_cos(real *in, real *out) {
 }
 
 header* mpqcos2(Calc* cc, header* hd) {
+	if (hd->type == s_reference) { // if the variable is a reference 
+        hd = getvalue(cc, hd);
+    }
     if (hd->type != s_real && hd->type != s_matrix) {
         cc_error(cc, "Invalid input type for mpqcos");
         return NULL;
@@ -199,11 +206,62 @@ static int32_t fft_in[1024];
 
 header* mpqfft (Calc *cc, header *hd)
 {
-	return NULL;
+    int r, c;
+    real *m, *mr;
+    header *result;
+
+
+	if (hd->type == s_reference) { // if the variable is a reference 
+        hd = getvalue(cc, hd);
+    }
+
+    // Vérifier le type d'entrée
+    if (hd->type != s_real && hd->type != s_complex && hd->type != s_matrix) {
+        cc_error(cc, "Type d'entrée non valide pour mpqfft");
+        return NULL;
+    }
+
+    getmatrix(hd, &r, &c, &m);
+    if (r != 1) cc_error(cc, "Vecteur ligne attendu");
+
+    // Allouer un nouveau vecteur pour le résultat
+    result = new_cmatrix(cc, 1, c, "");
+    mr = matrixof(result);
+
+    // Appel à la fonction PowerQuad pour le calcul FFT
+    PQ_TransformCFFT(POWERQUAD, c, m, mr); // Remplacer cc->base par la référence PowerQuad appropriée
+
+    // Renvoyer le résultat
+    return pushresults(cc, result);
 }
 
+// Exemple de mpqifft, le cas IFFT avec PowerQuad
 header* mpqifft (Calc* cc, header* hd)
 {
-	return NULL;
+    int r, c;
+    real *m, *mr;
+    header *result;
+
+	if (hd->type == s_reference) { // if the variable is a reference 
+        hd = getvalue(cc, hd);
+    }
+    // Vérifier le type d'entrée
+    if (hd->type != s_real && hd->type != s_complex && hd->type != s_matrix) {
+        cc_error(cc, "Type d'entrée non valide pour mpqifft");
+        return NULL;
+    }
+
+    getmatrix(hd, &r, &c, &m);
+    if (r != 1) cc_error(cc, "Vecteur ligne attendu");
+
+    // Allouer un nouveau vecteur pour le résultat
+    result = new_cmatrix(cc, 1, c, "");
+    mr = matrixof(result);
+
+    // Appel à la fonction PowerQuad pour le calcul IFFT
+    PQ_TransformIFFT(POWERQUAD, c, m, mr); // Remplacer cc->base par la référence PowerQuad appropriée
+
+    // Renvoyer le résultat
+    return pushresults(cc, result);
 }
 
