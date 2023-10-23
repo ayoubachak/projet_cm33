@@ -15,7 +15,7 @@ typedef struct _header  header;
 #define TERMWIDTH		80
 #define TERMHEIGHT		24
 
-#define HELPFILE "help.txt"
+#define HELPFILE "2:/help.txt"
 
 #include <math.h>
 #include <float.h>

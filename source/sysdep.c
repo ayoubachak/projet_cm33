@@ -13,8 +13,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <ctype.h>
-// #include <time.h>
 
+#include <string.h>
 #include "fsl_debug_console.h"
 #include "pin_mux.h"
 #include "board.h"
@@ -187,10 +187,16 @@ void sys_out_mode (int mode)
 	omode=mode;
 	switch (mode) {
 	case CC_OUTPUT:
+		uart_puts(USART0, "\x1b[37m");
+		break;
 	case CC_WARN:
+		uart_puts(USART0, "\x1b[33m");
+		break;
 	case CC_ERROR:
+		uart_puts(USART0, "\x1b[31m");
 		break;
 	case CC_EDIT:
+		uart_puts(USART0, "\x1b[32m");
 		uart_puts(USART0,"> ");
 		break;
 	case CC_FEDIT:
@@ -230,18 +236,123 @@ when the command line is on.
 *****/
 int sys_wait_key (scan_t *scan)
 {
-	char c=uart_getc(USART0);
+	char c = uart_getc(USART0);
 	switch (c) {
 	case '\r':
 	case '\n':
 		c='\n';
-		*scan=enter;
+		*scan = enter;
 		break;
-	default:
-		*scan=key_normal;
-	}
+	case '\x1b':
+		if (uart_getc(USART0) == '['){
+			switch(uart_getc(USART0)){
+			case 'A':
+				*scan = cursor_up;
+				break;
+			case 'B':
+				*scan = cursor_down;
+				break;
+			case 'C':
+				*scan = cursor_right;
+				break;
+			case 'D':
+				*scan = cursor_left;
+				break;
+			case 'H':
+				*scan = line_start;
+				break;
+			case 'F':
+				*scan = line_end;
+				break;
+			case '5':
+				if (uart_getc(USART0) == '~')
+						*scan = page_up;
+				break;
+			case '6':
+				if (uart_getc(USART0) == '~')
+					    *scan = page_down;
+				break;
+			case '2':
+				switch(uart_getc(USART0)){
+				case '~':
+					*scan = sel_insert && help;
+					break;
+				case '0':
+	     			if (uart_getc(USART0) == '~')
+	     				*scan = fk9;
+				    break;
+				case '1':
+					if (uart_getc(USART0) == '~')
+						*scan = fk10;
+					break;
+     			case '3':
+					if (uart_getc(USART0) == '~')
+						*scan = fk11;
+					break;
+				case '4':
+					if (uart_getc(USART0) == '~')
+						*scan = fk12;
+     				break;}
+				break;
+			case '3':
+				if (uart_getc(USART0) == '~')
+						*scan = delete;
+				break;
+			case '1':
+				switch(uart_getc(USART0)){
+				case '5':
+					if (uart_getc(USART0) == '~')
+						*scan = fk5;
+					break;
+				case '7':
+					if (uart_getc(USART0) == '~')
+						*scan = fk6;
+					break;
+				case '8':
+					if (uart_getc(USART0) == '~')
+						*scan = fk7;
+					break;
+				case '9':
+					if (uart_getc(USART0) == '~')
+						*scan = fk8;
+					break;}
+		        break;
+
+			}
+			}
+		else if(uart_getc(USART0) == 'O'){
+			switch (uart_getc(USART0)){
+			case 'P':
+				*scan = fk1;
+				break;
+			case 'Q':
+				*scan = fk2;
+				break;
+			case 'R':
+				*scan = fk3;
+				break;
+			case 'S':
+				*scan = fk4;
+				break;
+			}
+		 }
+		else {
+			*scan = escape;
+		}
+		break;
+		case '\x08':
+			*scan = backspace;
+			break;
+		case '\x04':
+             *scan = eot;
+			break;
+		default:
+			*scan=key_normal;
+
+		}
 	return c;
-}
+	}
+
 
 int sys_test_key (void)
 /***** test_key
@@ -276,41 +387,42 @@ void sys_clear (void)
 /***** Clear the text screen
 ******/
 {
-	/* A COMPLETER */
+	uart_puts(USART0, "\x1b[2J");
 }
 
 void text_mode ()
 {
+
 }
 
 void move_cl_cb (void)
 /* move the text cursor left */
 {
-	/* A COMPLETER */
+	uart_puts(USART0, "\x1b[1D");
 }
 
 void move_cr_cb (void)
 /* move the text cursor right */
 {
-	/* A COMPLETER */
+	uart_puts(USART0, "\x1b[1C");
 }
 
 void cursor_on_cb (void)
 /* switch cursor on */
 {
-	/* A COMPLETER */
+	uart_puts(USART0, "\x1b[?25h");
 }
 
 void cursor_off_cb (void)
 /* switch cursor off */
 {
-	/* A COMPLETER */
+	uart_puts(USART0, "\x1b[?251");
 }
 
 void clear_eol (void)
 /* clear the text line from cursor position */
 {
-	/* A COMPLETER */
+	uart_puts(USART0, "\x1b[K");
 }
 
 void edit_off_cb (void)
@@ -336,7 +448,7 @@ real sys_clock (void)
 /***** define a timer in seconds.
 ******/
 {
-    
+	
     return (real) time();
 	// return 0.0;
 }
@@ -448,21 +560,21 @@ static void update_sd_state()
 	if (!card_ready) {
 		/* Init card. */
 		SD_CardInit(&card);
-//		sd_info(&card);
+		sd_info(&card);
 		/* mount file system */
-//		res=f_mount( A COMPLETER );
+		res=f_mount(&fs, driverNumberBuffer, 1);
 		if (res!=FR_OK) return;
 		/* select the drive */
-//		res=f_chdrive( A COMPLETER );
+		res=f_chdrive(driverNumberBuffer);
 		if (res!=FR_OK) return;
 		/* get the current root path */
-//		res=f_getcwd( A COMPLETER );
+		res=f_getcwd(cur_path, sizeof(cur_path));
 		if (res!=FR_OK) return;
 		card_ready=true;
 	} else {
 		card_ready=false;
 		/* unmount file system */
-//		f_mount( A COMPLETER );
+		f_mount(NULL, driverNumberBuffer, 0);
 	}
 }
 
@@ -559,33 +671,44 @@ int fs_dir(char *dir_name, char *pat, char ** files[], int *files_count)
  */
 char *fs_cd (char *dir)
 {
-	/* A COMPLETER */
+	FRESULT res;
+	if (dir == NULL) {
+	        return cur_path;
+	    }
+	else{
+		   res = f_chdir(dir);
 
-	return path[0];
+		   if (res == FR_OK) {
+			res = f_getcwd(cur_path, sizeof(cur_path));
+
+	          }
 }
-
+	return cur_path;
+}
 /* fs_mkdir --> mkdir command
  *   create a new directory
  */
 int fs_mkdir(char* dirname)
-{
+{   FRESULT res;
 	if (!card_ready) return -1;
 
-	/* A COMPLETER */
-
-	return -1;
+	res = f_mkdir(dirname);
+    if(res != FR_OK){
+	   return -1;}
+    return 1;
 }
 
 /* fs_rm --> rm command
  *   delete a file or empty directory
  */
 int fs_rm(char* filename)
-{
+{   FRESULT res;
 	if (!card_ready) return -1;
 
-	/* A COMPLETER */
-
-	return -1;
+	res = f_unlink(filename);
+	if(res != FR_OK){
+		return -1;}
+	return 1;
 }
 
 /************************ libc stubs *******************/
@@ -597,34 +720,57 @@ int fs_rm(char* filename)
 
 FIL files[MAX_FILES];
 int cur_file=-1;
+int fd = 0;
+int isWriting = 0;
 
 int _open(const char *name, int flags, int mode) {
 	FRESULT res;
-
-	/* A COMPLETER */
-	
-	return -1;
+	if (fd >= MAX_FILES) {
+	        return -1; // Max file descriptors exceeded
+	    }
+	for(int i=0; i <MAX_FILES; i++){
+		if(files[i].obj.fs == NULL){
+	        res = f_open(&files[i], name, flags | mode);
+	        if(res != FR_OK){
+		          return -1;}
+	        fd = i;
+	        return fd;
+	         }
+	     }
+    return -1;
 }
 
 int _close(int fd) {
 
-	/* A COMPLETER */
+    FRESULT res;
 
-	return -1;
+    res = f_close(&files[fd]);
+    if(res != FR_OK){
+        	return -1;
+        }
+	return 0;
 }
 
 int _read(int fd, char *ptr, int len) {
+	FRESULT res;
+	UINT nbOfBytesRead;
+	res = f_read(&files[fd], ptr, len, &nbOfBytesRead);
+	    if(res != FR_OK){
+	        	return -1;
+	        }
 
-	/* A COMPLETER */
-
-	return -1;
+		return nbOfBytesRead;
 }
 
 int _write(int fd, char *ptr, int len) {
-
-	/* A COMPLETER */
-
-	return -1;
+	FRESULT res;
+    	UINT nbOfBytesWrite;
+	res = f_write(&files[fd], ptr, len, &nbOfBytesWrite);
+		    if(res != FR_OK){
+		        	return -1;
+		        }
+    	isWriting = 1;
+	return nbOfBytesWrite;
 }
 
 
@@ -1562,7 +1708,9 @@ Initialize memory and call main_loop
 	PQ_SetConfig(POWERQUAD, &pq_cfg);
 
 	/* setup sd card */
-//	sd_init(/* ... */);
+	sd_init(&card,card_detect_cb, NULL);
+
+
 	
 	/* set up default pathes and directory */
     OSA_TimeDelay(500);
@@ -1575,6 +1723,7 @@ Initialize memory and call main_loop
 	lcd_init();
 	lcd_switch_to(LCD_DPY);
 	ginit(&gw);
+
 
 #ifdef MULTICORE_APP
     core1_startup( /* A COMPLETER */ );

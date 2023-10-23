@@ -249,15 +249,20 @@ header* mpqfft (Calc *cc, header *hd)
 	PQ_SetConfig(POWERQUAD, &pgConfig);
 
 	// Convert floating point input to fixed point
+	
 	for (int i = 0; i < c; i++) {
 		m[i] = (int16_t)(m[i] * (1 << 9)); // Shift by 5 bits to the left
+		fft_in[i] = (int32_t)m[i];
 	}
     // // Appel à la fonction PowerQuad pour le calcul FFT
 	// for (int i=0;i<r;i++) {
 	//     PQ_TransformRFFT(POWERQUAD,c,&m[i*c],&mr[i*(c/2+1)]);
 	// }
 
-    PQ_TransformRFFT(POWERQUAD, c, m, mr); 
+    PQ_TransformRFFT(POWERQUAD, 512, fft_in, fft_out); 
+	for (int i = 0; i < c; i++) {
+		mr[i] = fft_out[i];
+	}
 	PQ_WaitDone(POWERQUAD);
     // Renvoyer le résultat
     return pushresults(cc, result);
@@ -287,7 +292,37 @@ header* mpqifft (Calc* cc, header* hd)
     mr = matrixof(result);
 
     // Appel à la fonction PowerQuad pour le calcul IFFT
-    PQ_TransformIFFT(POWERQUAD, c, m, mr); 
+    PQ_Init(POWERQUAD);
+
+	// Configurer les régions de mémoire pour PowerQuad
+	pq_config_t pgConfig;
+	pgConfig.inputAFormat = kPQ_16Bit; // Format fixed-point for input A
+	pgConfig.inputAPrescale = 9; // Prescale for input A
+	pgConfig.tmpFormat = kPQ_32Bit; 
+	pgConfig.tmpPrescale = 0; 
+	pgConfig.outputFormat = kPQ_32Bit; 
+	pgConfig.outputPrescale = 0; 
+	pgConfig.machineFormat = kPQ_32Bit;
+
+	PQ_SetConfig(POWERQUAD, &pgConfig);
+
+	// Convert floating point input to fixed point
+	
+	for (int i = 0; i < c; i++) {
+		m[i] = (int16_t)(m[i] * (1 << 9)); // Shift by 5 bits to the left
+		fft_in[i] = (int32_t)m[i];
+	}
+    // // Appel à la fonction PowerQuad pour le calcul FFT
+	// for (int i=0;i<r;i++) {
+	//     PQ_TransformRFFT(POWERQUAD,c,&m[i*c],&mr[i*(c/2+1)]);
+	// }
+
+    PQ_TransformIFFT(POWERQUAD, 512, fft_in, fft_out); 
+	for (int i = 0; i < c; i++) {
+		mr[i] = fft_out[i];
+	}
+
+	PQ_WaitDone(POWERQUAD);
 
     // Renvoyer le résultat
     return pushresults(cc, result);
