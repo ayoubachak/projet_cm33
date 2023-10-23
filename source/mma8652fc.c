@@ -192,6 +192,7 @@ status_t mma8652_read_xyz(int32_t* data)
     /* NXP AN4083, table 15, p17 */
 
 	/* A COMPLETER */
+    /* Version 1 */
     // // Convert the 12-bit 2's complement hex number to a signed decimal fraction in g's
     // int16_t x, y, z; // 16-bit signed integers for x, y, and z values
     // int32_t xg, yg, zg; // 32-bit signed integers for x, y, and z values in mg
@@ -219,18 +220,30 @@ status_t mma8652_read_xyz(int32_t* data)
     /* Version 2 */
     if (mma8652_cfg & MMA8652_RES_8) {
         	data[0]=((buf[0]<<8))>>4;
-        	if (data[0]>=2048) data[0]-=4096;
+        	if (data[0]>=2048) {
+                data[0]-=4096;
+            }
         	data[1]=((buf[1]<<8))>>4;
-        	if (data[1]>=2048) data[1]-=4096;
+        	if (data[1]>=2048) {
+                data[1]-=4096;
+            }
         	data[2]=((buf[2]<<8))>>4;
-        	if (data[2]>=2048) data[2]-=4096;
+        	if (data[2]>=2048) {
+                data[2]-=4096;
+            }
     	} else {
     		data[0]=((buf[0]<<8) | buf[1])>>4;
-    		if (data[0]>=2048) data[0]-=4096;
+    		if (data[0]>=2048) {
+                data[0]-=4096;
+            }
     		data[1]=((buf[2]<<8) | buf[3])>>4;
-    		if (data[1]>=2048) data[1]-=4096;
+    		if (data[1]>=2048) {
+                data[1]-=4096;
+            }
     		data[2]=((buf[4]<<8) | buf[5])>>4;
-    		if (data[2]>=2048) data[2]-=4096;
+    		if (data[2]>=2048) {
+                data[2]-=4096;
+            }
         }
         data[0]=(1000*data[0]+(1<<(9-scale)))>>(10-scale);
         data[1]=(1000*data[1]+(1<<(9-scale)))>>(10-scale);

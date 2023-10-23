@@ -13,6 +13,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <ctype.h>
+// #include <time.h>
 
 #include "fsl_debug_console.h"
 #include "pin_mux.h"
@@ -335,7 +336,9 @@ real sys_clock (void)
 /***** define a timer in seconds.
 ******/
 {
-	return 0.0;
+    
+    return (real) time();
+	// return 0.0;
 }
 
 void sys_wait (real time, scan_t *scan)

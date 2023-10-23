@@ -11,6 +11,7 @@
 #include <string.h>
 #include <limits.h>
 
+
 #include "funcs.h"
 #include "spread.h"
 #include "edit.h"
@@ -1730,7 +1731,8 @@ static void c_cos (cplx x, cplx z)
 }
 
 header* mcos (Calc *cc, header *hd)
-{	return spread1(cc,cos,c_cos,hd);
+{
+	return spread1(cc,cos,c_cos,hd);
 }
 
 static void c_tan (cplx x, cplx z)

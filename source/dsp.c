@@ -8,6 +8,9 @@
 #include "fsl_powerquad.h"
 
 
+extern uint32_t timerCounter; 
+
+
 /****************************************************************
  *	FFT
  ****************************************************************/
@@ -142,9 +145,9 @@ header* maccel(Calc *cc, header *hd)
     
 	int32_t data[3];
 	mma8652_read_xyz(data);
-	m[0] = (real)data[0];
-	m[1] = (real)data[1];
-	m[2] = (real)data[2];
+	m[0] = (real)data[0]/1000.0;
+	m[1] = (real)data[1]/1000.0;
+	m[2] = (real)data[2]/1000.0;
 
     return pushresults(cc, result);
 }
@@ -154,7 +157,8 @@ header* mpqcos(Calc* cc, header* hd) {
     int r, c; // rows and columns
     real *m, *mr; // pointers to input and output matrices
     header *result; // Output header
-    
+    // PRINTF("$s\r\n", __func__ ):
+
 	if (hd->type == s_reference) { // if the variable is a reference 
         hd = getvalue(cc, hd);
     }
@@ -191,6 +195,7 @@ header* mpqcos2(Calc* cc, header* hd) {
 	if (hd->type == s_reference) { // if the variable is a reference 
         hd = getvalue(cc, hd);
     }
+	
     if (hd->type != s_real && hd->type != s_matrix) {
         cc_error(cc, "Invalid input type for mpqcos");
         return NULL;
@@ -211,13 +216,14 @@ header* mpqfft (Calc *cc, header *hd)
     header *result;
 
 
+
 	if (hd->type == s_reference) { // if the variable is a reference 
         hd = getvalue(cc, hd);
     }
 
     // Vérifier le type d'entrée
     if (hd->type != s_real && hd->type != s_complex && hd->type != s_matrix) {
-        cc_error(cc, "Type d'entrée non valide pour mpqfft");
+        cc_error(cc, "Type d'entrée non valide");
         return NULL;
     }
 
@@ -228,9 +234,31 @@ header* mpqfft (Calc *cc, header *hd)
     result = new_cmatrix(cc, 1, c, "");
     mr = matrixof(result);
 
-    // Appel à la fonction PowerQuad pour le calcul FFT
-    PQ_TransformCFFT(POWERQUAD, c, m, mr); // Remplacer cc->base par la référence PowerQuad appropriée
+	PQ_Init(POWERQUAD);
 
+	// Configurer les régions de mémoire pour PowerQuad
+	pq_config_t pgConfig;
+	pgConfig.inputAFormat = kPQ_16Bit; // Format fixed-point for input A
+	pgConfig.inputAPrescale = 9; // Prescale for input A
+	pgConfig.tmpFormat = kPQ_32Bit; 
+	pgConfig.tmpPrescale = 0; 
+	pgConfig.outputFormat = kPQ_32Bit; 
+	pgConfig.outputPrescale = 0; 
+	pgConfig.machineFormat = kPQ_32Bit;
+
+	PQ_SetConfig(POWERQUAD, &pgConfig);
+
+	// Convert floating point input to fixed point
+	for (int i = 0; i < c; i++) {
+		m[i] = (int16_t)(m[i] * (1 << 9)); // Shift by 5 bits to the left
+	}
+    // // Appel à la fonction PowerQuad pour le calcul FFT
+	// for (int i=0;i<r;i++) {
+	//     PQ_TransformRFFT(POWERQUAD,c,&m[i*c],&mr[i*(c/2+1)]);
+	// }
+
+    PQ_TransformRFFT(POWERQUAD, c, m, mr); 
+	PQ_WaitDone(POWERQUAD);
     // Renvoyer le résultat
     return pushresults(cc, result);
 }
@@ -259,7 +287,7 @@ header* mpqifft (Calc* cc, header* hd)
     mr = matrixof(result);
 
     // Appel à la fonction PowerQuad pour le calcul IFFT
-    PQ_TransformIFFT(POWERQUAD, c, m, mr); // Remplacer cc->base par la référence PowerQuad appropriée
+    PQ_TransformIFFT(POWERQUAD, c, m, mr); 
 
     // Renvoyer le résultat
     return pushresults(cc, result);
